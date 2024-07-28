@@ -57,7 +57,7 @@ linux_commands = [
 def print_header():
     # Generate ASCII art with a hacker theme
     header = pyfiglet.figlet_format("Terminalax", font="slant")
-    description = "Your ultimate terminal assistant with NLP and command execution."
+    description = "Ultimate AI terminal by Khacks cyberecurity club"
     hacker_art = pyfiglet.figlet_format("Hack the Planet!", font="digital")
 
     print(colored(header, 'green', attrs=['bold']))
