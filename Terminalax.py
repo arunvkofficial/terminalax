@@ -14,22 +14,29 @@ def run_command(command):
 
 def install_dependencies():
     """Install required dependencies."""
+    print("Installing dependencies...")
     run_command("sudo apt-get update")
     run_command("sudo apt-get install -y openjdk-11-jdk wget tar")
 
 def install_hadoop():
     """Download and install Hadoop."""
+    print("Installing Hadoop...")
     hadoop_version = "3.3.1"
-    hadoop_url = f"https://downloads.apache.org/hadoop/common/hadoop-{hadoop_version}/hadoop-{hadoop_version}.tar.gz"
+    hadoop_url = f"https://archive.apache.org/dist/hadoop/common/hadoop-{hadoop_version}/hadoop-{hadoop_version}.tar.gz"
     run_command(f"wget {hadoop_url} -O hadoop.tar.gz")
     run_command("tar -xzvf hadoop.tar.gz")
     run_command(f"sudo mv hadoop-{hadoop_version} /usr/local/hadoop")
     run_command("echo 'export HADOOP_HOME=/usr/local/hadoop' >> ~/.bashrc")
     run_command("echo 'export PATH=$PATH:$HADOOP_HOME/bin' >> ~/.bashrc")
-    run_command("source ~/.bashrc")
+    run_command("exec bash")  # Reload the shell environment
 
 def configure_hadoop():
     """Configure Hadoop by setting up core-site.xml, hdfs-site.xml, and mapred-site.xml."""
+    print("Configuring Hadoop...")
+    if not os.path.exists('/usr/local/hadoop'):
+        print("Hadoop directory does not exist. Ensure Hadoop is installed correctly.")
+        return
+
     core_site = """<?xml version="1.0" encoding="UTF-8"?>
     <configuration>
         <property>
@@ -54,15 +61,19 @@ def configure_hadoop():
         </property>
     </configuration>
     """
-    with open('/usr/local/hadoop/etc/hadoop/core-site.xml', 'w') as f:
+    config_dir = '/usr/local/hadoop/etc/hadoop'
+    os.makedirs(config_dir, exist_ok=True)
+
+    with open(os.path.join(config_dir, 'core-site.xml'), 'w') as f:
         f.write(core_site)
-    with open('/usr/local/hadoop/etc/hadoop/hdfs-site.xml', 'w') as f:
+    with open(os.path.join(config_dir, 'hdfs-site.xml'), 'w') as f:
         f.write(hdfs_site)
-    with open('/usr/local/hadoop/etc/hadoop/mapred-site.xml', 'w') as f:
+    with open(os.path.join(config_dir, 'mapred-site.xml'), 'w') as f:
         f.write(mapred_site)
 
 def start_hadoop_services():
     """Start Hadoop services."""
+    print("Starting Hadoop services...")
     run_command("sudo /usr/local/hadoop/sbin/start-dfs.sh")
     run_command("sudo /usr/local/hadoop/sbin/start-yarn.sh")
     print("Hadoop services started.")
@@ -74,6 +85,7 @@ def wait_for_services():
 
 def verify_services():
     """Verify that Hadoop services are running."""
+    print("Verifying Hadoop services...")
     run_command("jps")
 
 def main():
