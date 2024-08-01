@@ -12,20 +12,13 @@ def run_command(command):
     else:
         print(out.decode())
 
-def install_dependencies():
-    """Install required dependencies."""
-    print("Installing dependencies...")
-    run_command("sudo apt-get update")
-    run_command("sudo apt-get install -y openjdk-11-jdk wget tar")
-
-def install_hadoop():
-    """Download and install Hadoop."""
-    print("Installing Hadoop...")
-    hadoop_version = "3.3.1"
-    hadoop_url = f"https://archive.apache.org/dist/hadoop/common/hadoop-{hadoop_version}/hadoop-{hadoop_version}.tar.gz"
-    run_command(f"wget {hadoop_url} -O hadoop.tar.gz")
-    run_command("tar -xzvf hadoop.tar.gz")
-    run_command(f"sudo mv hadoop-{hadoop_version} /usr/local/hadoop")
+def extract_and_setup_hadoop():
+    """Extract Hadoop tar file and set up environment."""
+    print("Extracting Hadoop tar file...")
+    run_command("tar -xzvf hadoop-3.3.1.tar.gz -C /usr/local/")
+    
+    # Set up environment variables
+    print("Setting up environment variables...")
     run_command("echo 'export HADOOP_HOME=/usr/local/hadoop' >> ~/.bashrc")
     run_command("echo 'export PATH=$PATH:$HADOOP_HOME/bin' >> ~/.bashrc")
     run_command("exec bash")  # Reload the shell environment
@@ -33,10 +26,9 @@ def install_hadoop():
 def configure_hadoop():
     """Configure Hadoop by setting up core-site.xml, hdfs-site.xml, and mapred-site.xml."""
     print("Configuring Hadoop...")
-    if not os.path.exists('/usr/local/hadoop'):
-        print("Hadoop directory does not exist. Ensure Hadoop is installed correctly.")
-        return
-
+    config_dir = '/usr/local/hadoop/etc/hadoop'
+    os.makedirs(config_dir, exist_ok=True)
+    
     core_site = """<?xml version="1.0" encoding="UTF-8"?>
     <configuration>
         <property>
@@ -61,9 +53,7 @@ def configure_hadoop():
         </property>
     </configuration>
     """
-    config_dir = '/usr/local/hadoop/etc/hadoop'
-    os.makedirs(config_dir, exist_ok=True)
-
+    
     with open(os.path.join(config_dir, 'core-site.xml'), 'w') as f:
         f.write(core_site)
     with open(os.path.join(config_dir, 'hdfs-site.xml'), 'w') as f:
@@ -90,8 +80,7 @@ def verify_services():
 
 def main():
     """Main function to run setup steps."""
-    install_dependencies()
-    install_hadoop()
+    extract_and_setup_hadoop()
     configure_hadoop()
     start_hadoop_services()
     wait_for_services()
@@ -100,4 +89,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
